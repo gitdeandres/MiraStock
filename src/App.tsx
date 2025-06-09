@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
-import { invoke } from '@tauri-apps/api/core'
 
 interface Product {
   name: string
@@ -77,7 +76,7 @@ export default function App() {
     setSku(code)
 
     try {
-      const baseUrl = await invoke<string>('get_env', { name: 'BIOQUIMICAPI_URL' })
+      const baseUrl = import.meta.env.VITE_BIOQUIMICAPI_URL
       const url = new URL('product/stockprice', baseUrl)
       url.searchParams.set('sku', code)
 
