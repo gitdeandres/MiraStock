@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import '@fortawesome/fontawesome-free/css/all.min.css'
+import { error as logError, info as logInfo } from '@tauri-apps/plugin-log'
 
 interface Product {
   name: string
@@ -75,6 +76,7 @@ export default function App() {
     setCountdown(5)
     setSku(code)
 
+    logInfo(`Buscando producto con SKU: '${code}'`)
     try {
       const baseUrl = import.meta.env.VITE_BIOQUIMICAPI_URL
       const url = new URL('product/stockprice', baseUrl)
@@ -82,23 +84,28 @@ export default function App() {
 
       const response = await fetch(url.toString())
 
-      if (!response.ok) throw new Error('Error en la respuesta de la API')
+      const responseText = await response.text()
+      logInfo(`Respuesta de la API: ${response.status} ${responseText}`)
 
-      const data = await response.json()
-      const info = data.data
+      if (response.ok) {
+        const data = await response.json()
+        const info = data?.data
+        const { name, price, stock } = info ?? {}
 
-      if (!info.name || info.price == null || info.stock == null) {
-        setError('Producto no encontrado o incompleto')
+        if (!name || price == null || stock == null) {
+          setError('Producto no encontrado o incompleto')
+        } else {
+          setProduct({ name, price, stock })
+        }
+
+      } else if (response.status === 404) {
+        setError('Producto no encontrado')
       } else {
-        setProduct({
-          name: info.name,
-          price: info.price,
-          stock: info.stock,
-        })
+        setError('Error en la búsqueda del producto')
       }
     } catch (err) {
-      console.error('Error al consultar la API:', err)
-      setError('No se pudo conectar con la API de productos')
+      logError(`Error inesperado al buscar el producto: ${err}`)
+      setError('No se pudo realizar la búsqueda del producto')
     } finally {
       setLoading(false)
     }
