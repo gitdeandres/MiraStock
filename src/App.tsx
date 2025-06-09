@@ -84,7 +84,9 @@ export default function App() {
 
       const response = await fetch(url.toString())
 
-      const responseText = await response.text()
+      // Clonar el response antes de leerlo como texto
+      const responseClone = response.clone()
+      const responseText = await responseClone.text()
       logInfo(`Respuesta de la API: ${response.status} ${responseText}`)
 
       if (response.ok) {
